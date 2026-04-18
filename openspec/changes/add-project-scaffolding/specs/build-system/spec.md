@@ -19,7 +19,7 @@ The project SHALL ship a `CMakePresets.json` file at the repository root definin
 - **THEN** both `debug` and `release` appear in the output
 
 ### Requirement: Third-party dependencies resolved via find_package
-The project SHALL resolve Eigen and Google Test using `find_package` in `CONFIG` mode against system-installed copies. When a required dependency is not found, CMake SHALL fail at configure time with a message that names the missing package and references the README install instructions.
+The project SHALL resolve Eigen and Google Test using `find_package` against system-installed copies (either CMake CONFIG or MODULE mode, whichever the package provides). When a required dependency is not found, CMake SHALL fail at configure time with a message that names the missing package and references the README install instructions.
 
 #### Scenario: Configure succeeds when prerequisites are installed
 - **WHEN** a contributor has installed the prerequisites listed in `README.md` and runs `cmake --preset=debug`
