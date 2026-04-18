@@ -1,0 +1,18 @@
+# clang-format configuration for motion_control
+# Target clang-format version: 18
+# Apply locally with: clang-format-18 -i <files>
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++20
+ColumnLimit: 100
+PointerAlignment: Left
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+AccessModifierOffset: -2
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AlwaysBreakTemplateDeclarations: Yes
+IncludeBlocks: Regroup
+...

@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    name: Build and test (debug)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-12 g++-12 \
+            libeigen3-dev libgtest-dev libgmock-dev
+
+      - name: Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: "3.28.0"
+          ninjaVersion: "1.11.1"
+
+      - name: Configure (debug)
+        env:
+          CC: gcc-12
+          CXX: g++-12
+        run: cmake --preset=debug
+
+      - name: Build (debug)
+        run: cmake --build --preset=debug
+
+      - name: Test (debug)
+        run: ctest --preset=debug --output-on-failure
+
+  format-check:
+    name: clang-format check
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format-18
+        run: |
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
+            | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm.gpg
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main" \
+            | sudo tee /etc/apt/sources.list.d/llvm.list
+          sudo apt-get update
+          sudo apt-get install -y clang-format-18
+
+      - name: Run clang-format --dry-run --Werror
+        shell: bash
+        run: |
+          mapfile -t files < <(git ls-files '*.cpp' '*.hpp' '*.h' '*.cc')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "No C++ files to check."
+            exit 0
+          fi
+          printf 'Checking:\n'
+          printf '  %s\n' "${files[@]}"
+          clang-format-18 --dry-run --Werror "${files[@]}"
