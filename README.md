@@ -76,4 +76,23 @@ Code style is enforced with `clang-format` (pinned to version 18, config at `.cl
 clang-format-18 -i $(git ls-files '*.cpp' '*.hpp')
 ```
 
-CI runs `clang-format-18 --dry-run --Werror` on every push and pull request.
+Formatting and baseline hygiene checks are wired through `pre-commit` (see below), which is what CI runs.
+
+## Pre-commit hooks
+
+Formatting and hygiene checks are driven by [`pre-commit`](https://pre-commit.com) using the config at `.pre-commit-config.yaml`. CI runs the exact same config, so a green local run means a green `format-check` job.
+
+One-time setup per clone:
+
+```sh
+pipx install pre-commit   # or: pip install pre-commit
+pre-commit install
+```
+
+`pre-commit install` registers the Git hook so the configured checks run automatically on every `git commit`.
+
+To preflight the full repo manually:
+
+```sh
+pre-commit run --all-files
+```
