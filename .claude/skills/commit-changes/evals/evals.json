@@ -1,0 +1,57 @@
+{
+  "skill_name": "commit-changes",
+  "evals": [
+    {
+      "id": 0,
+      "name": "proposal-plus-impl",
+      "fixture": "fixtures/test1_proposal_plus_impl.sh",
+      "prompt": "I just finished proposing and implementing the motion profile generator. Can you commit everything?",
+      "expected_output": "Two commits: a `proposal:` commit containing only openspec/changes/motion-profile-generator/* and a `feat:` commit containing the .cpp + .hpp + test together. Both commits carry Co-Authored-By and Signed-off-by trailers.",
+      "files": [],
+      "assertions": [
+        {"name": "exactly_2_new_commits", "description": "Created exactly 2 new commits beyond baseline."},
+        {"name": "proposal_commit_exists_and_is_isolated", "description": "Has a commit whose subject starts with 'proposal:' and which contains only paths under openspec/changes/motion-profile-generator/."},
+        {"name": "impl_commit_pairs_feature_with_tests", "description": "Has a non-proposal commit that contains both src/planner/profile.cpp AND tests/planner/test_profile.cpp (feature + its test in the same commit)."},
+        {"name": "no_commit_mixes_openspec_and_code", "description": "No single commit contains both an openspec/changes/ path and a src/ or tests/ or include/ path."},
+        {"name": "all_new_commits_have_co_authored_by", "description": "Every new commit message contains a 'Co-Authored-By: Claude' trailer."},
+        {"name": "all_new_commits_have_signed_off_by", "description": "Every new commit message contains a 'Signed-off-by:' trailer."},
+        {"name": "subject_uses_conventional_type", "description": "Every new commit subject begins with one of: proposal:, archive:, feat, fix, chore, docs, test, refactor, perf, build, ci, style (with optional scope)."}
+      ]
+    },
+    {
+      "id": 1,
+      "name": "two-unrelated-changes",
+      "fixture": "fixtures/test2_two_unrelated_changes.sh",
+      "prompt": "Stage and commit what I have, splitting into atomic commits.",
+      "expected_output": "Three commits: planner-limits change paired with its test, logger change alone, README typo alone. Each carries both trailers.",
+      "files": [],
+      "assertions": [
+        {"name": "exactly_3_new_commits", "description": "Created exactly 3 new commits beyond baseline."},
+        {"name": "planner_commit_pairs_feature_with_tests", "description": "One commit contains both src/planner/limits.cpp AND tests/planner/test_limits.cpp."},
+        {"name": "logger_commit_isolated", "description": "One commit contains src/logging/logger.cpp and does NOT also contain planner or README files."},
+        {"name": "readme_commit_isolated", "description": "One commit contains README.md and does NOT also contain planner or logger files."},
+        {"name": "readme_uses_docs_type", "description": "The commit touching README.md uses subject type 'docs' (e.g. 'docs:' or 'docs(...):')."},
+        {"name": "no_commit_mixes_subsystems", "description": "No single commit mixes planner, logging, and docs paths."},
+        {"name": "all_new_commits_have_co_authored_by", "description": "Every new commit has a Co-Authored-By: Claude trailer."},
+        {"name": "all_new_commits_have_signed_off_by", "description": "Every new commit has a Signed-off-by: trailer."}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "archive-plus-cleanup",
+      "fixture": "fixtures/test3_archive_plus_cleanup.sh",
+      "prompt": "I'm done with the pre-commit-ci change. Commit my work.",
+      "expected_output": "Two commits: an `archive:` commit for the openspec rename, and a separate cleanup commit for src/util/string_utils.cpp. notes.txt is held back, not auto-committed.",
+      "files": [],
+      "assertions": [
+        {"name": "exactly_2_new_commits", "description": "Created exactly 2 new commits beyond baseline."},
+        {"name": "archive_commit_exists_and_is_isolated", "description": "Has a commit whose subject starts with 'archive:' that contains only paths under openspec/changes/ (the rename move)."},
+        {"name": "cleanup_commit_isolated", "description": "Has a non-archive commit that contains src/util/string_utils.cpp and does NOT contain any openspec/changes/ paths."},
+        {"name": "no_commit_mixes_openspec_and_code", "description": "No single commit contains both an openspec/changes/ path and a src/ or include/ path."},
+        {"name": "notes_txt_not_committed", "description": "notes.txt is NOT in any new commit (still untracked or explicitly held back)."},
+        {"name": "all_new_commits_have_co_authored_by", "description": "Every new commit has a Co-Authored-By: Claude trailer."},
+        {"name": "all_new_commits_have_signed_off_by", "description": "Every new commit has a Signed-off-by: trailer."}
+      ]
+    }
+  ]
+}
