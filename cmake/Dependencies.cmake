@@ -1,4 +1,4 @@
-find_package(Eigen3 3.4...<6 CONFIG QUIET)
+find_package(Eigen3 3.4...<6)
 if(NOT Eigen3_FOUND)
   message(FATAL_ERROR
     "Eigen3 (>= 3.4) not found.\n"
@@ -9,7 +9,7 @@ if(NOT Eigen3_FOUND)
 endif()
 
 if(BUILD_TESTING)
-  find_package(GTest QUIET)
+  find_package(GTest)
   if(NOT GTest_FOUND)
     message(FATAL_ERROR
       "GoogleTest not found.\n"
