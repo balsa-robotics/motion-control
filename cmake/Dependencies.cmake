@@ -1,9 +1,15 @@
-find_package(Eigen3 3.4...<6)
+find_package(Eigen3)
 if(NOT Eigen3_FOUND)
   message(FATAL_ERROR
     "Eigen3 (>= 3.4) not found.\n"
     "  Ubuntu: sudo apt install libeigen3-dev\n"
     "  macOS:  brew install eigen\n"
+    "See README.md for the full prerequisite list."
+  )
+endif()
+if(Eigen3_VERSION VERSION_LESS 3.4 OR Eigen3_VERSION VERSION_GREATER_EQUAL 6)
+  message(FATAL_ERROR
+    "Eigen3 ${Eigen3_VERSION} is not supported. Need >= 3.4 and < 6.\n"
     "See README.md for the full prerequisite list."
   )
 endif()
