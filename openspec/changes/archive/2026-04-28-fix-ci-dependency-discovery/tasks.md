@@ -14,4 +14,4 @@
 ## 3. Spec sync
 
 - [x] 3.1 Run `openspec validate fix-ci-dependency-discovery` (or the equivalent status check) and confirm no validation errors are reported against the modified `build-system` spec.
-- [ ] 3.2 Hand off to `/opsx:archive` once the change has been merged so the delta is folded back into `openspec/specs/build-system/spec.md`.
+- [x] 3.2 Hand off to `/opsx:archive` once the change has been merged so the delta is folded back into `openspec/specs/build-system/spec.md`.
