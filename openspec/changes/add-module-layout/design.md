@@ -136,6 +136,43 @@ Why this shape, not per-component libraries:
 - Per-component `OBJECT` libraries archived into one static library at the top. Rejected — `OBJECT`'s symbol-visibility quirks and the extra library type are not worth the marginal benefit over `target_sources`.
 - Single `STATIC` library with all sources listed in the top-level `src/CMakeLists.txt` (no per-component `CMakeLists.txt`). *Defensible.* Rejected only because per-component `CMakeLists.txt` keeps file ownership local to the component dir — adding a file means editing one small file in one place, not editing the top-level. The boilerplate is genuinely small (3 lines per file).
 
+### D2.5: Public-vs-private header layout — public in `include/`, private next to sources
+
+Headers that are part of a component's **public API surface** (intended to be `#include`'d by other components, tests, or external consumers) live under `include/motion_control/<component>/`. Headers that are implementation-only — internal helpers, bus-frame parsers, plugin registries, sub-component types not meant for cross-component consumption — live next to the source files that use them under `src/<component>/` (or sub-directories like `src/hal/canfd/`).
+
+```
+include/motion_control/                src/
+├── hal/                               ├── hal/
+│   └── hal.hpp        (public)        │   ├── CMakeLists.txt
+└── safety/                            │   ├── hal.cpp
+    ├── safety.hpp     (public)        │   ├── canfd/
+    └── plugin.hpp     (public)        │   │   ├── canfd.hpp     (private)
+                                       │   │   └── canfd.cpp
+                                       │   └── ethercat/
+                                       │       ├── ethercat.hpp  (private)
+                                       │       └── ethercat.cpp
+                                       └── safety/
+                                           ├── CMakeLists.txt
+                                           ├── safety.cpp
+                                           ├── plugin_registry.hpp  (private)
+                                           └── plugin_registry.cpp
+```
+
+Why this split:
+
+- **Public surface is unambiguous.** A reader scanning `include/motion_control/` sees exactly what's promised to consumers — nothing else. Reviewers can flag "is this really public?" by looking only at additions under `include/`.
+- **ABI hygiene is automatic.** A private header literally cannot be `#include`'d by external code, because it's not on the public include path.
+- **Implementer ergonomics.** Working on `canfd.cpp`, the helper `canfd.hpp` is right next to it — no navigation to a parallel directory tree.
+- **Industry practice.** Google, LLVM (`include/llvm/` public, `lib/` private), folly, Apache Arrow, Fuchsia, gRPC all follow this. The "all headers in `include/`" convention is a holdover from header-only-ish library days.
+
+CMake mechanics need no extra wiring: the `motion_control_core` target keeps `${CMAKE_SOURCE_DIR}/include` as its `PUBLIC` include directory; private headers next to their `.cpp` are found via `#include "canfd.hpp"` because the C preprocessor searches the directory of the file containing the `#include`. Cross-directory private includes within a component (rare; usually a layering smell) are the only case that would need a `target_include_directories(... PRIVATE ...)` addition.
+
+The current scaffolding already follows this rule by construction — every stub header we placed is a public-API placeholder. Future component proposals introducing private helpers MUST place them under `src/<component>/`; the spec includes a scenario covering the review path for misplaced files.
+
+**Alternatives considered:**
+- All headers under `include/motion_control/` regardless of public/private status. Rejected — collapses the public-surface signal; reviewers can't tell from path alone whether an addition is part of the contract or implementation detail.
+- All headers next to sources in `src/<component>/`, with no separate `include/`. Rejected — breaks the existing `motion_control::core` consumer pattern (`#include <motion_control/...>`) and the build-system spec's "Public headers under project-prefixed include path" requirement.
+
 ### D3: Sub-namespace per component
 
 Every component's public symbols live in `motion_control::<component>::…`:

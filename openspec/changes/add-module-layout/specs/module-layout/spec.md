@@ -16,7 +16,7 @@ The project SHALL organize its non-test C++ source code under per-component dire
 - **THEN** the entries are exactly the per-component directories plus `CMakeLists.txt`, with no loose `.cpp` files at the `src/` root
 
 ### Requirement: Public headers live under matching component subdirectories
-The project SHALL place every public header for component `<component>` under `include/motion_control/<component>/`. The set of subdirectories under `include/motion_control/` SHALL match the set of component directories under `src/`. Consumers SHALL include public headers via `#include <motion_control/<component>/<file>.hpp>`.
+The project SHALL place every header that is part of component `<component>`'s **public API surface** under `include/motion_control/<component>/`. A header is part of the public API surface if it declares a type, function, or template that is intended to be `#include`'d by code outside this component (other components, tests, or external consumers). The set of subdirectories under `include/motion_control/` SHALL match the set of component directories under `src/`. Consumers SHALL include public headers via `#include <motion_control/<component>/<file>.hpp>`.
 
 #### Scenario: Component directories under src/ and include/motion_control/ stay in sync
 - **WHEN** a maintainer audits the layout
@@ -25,6 +25,25 @@ The project SHALL place every public header for component `<component>` under `i
 #### Scenario: A consumer includes a public header
 - **WHEN** test code or another component writes `#include <motion_control/hal/hal.hpp>`
 - **THEN** the header is resolved against `include/motion_control/hal/hal.hpp` without additional include-path configuration
+
+#### Scenario: A header that is only used inside one component does not belong here
+- **WHEN** a contributor adds a header that is only `#include`'d by source files within the same component (e.g., a parser helper used only by that component's `.cpp` files)
+- **THEN** the header lives next to its sources under `src/<component>/`, NOT under `include/motion_control/<component>/`
+
+### Requirement: Private headers are co-located with their sources
+Headers that are **not** part of the public API surface — implementation helpers, internal data types, plugin registry guts, bus-frame parsers, and similar — SHALL live next to the source files that use them under `src/<component>/` (or any sub-directory thereof, e.g., `src/hal/canfd/canfd.hpp`). They SHALL NOT be placed under `include/motion_control/`. The C preprocessor's default behaviour of searching the directory of the file containing the `#include` directive SHALL be relied upon for sibling-file private includes; no per-component `target_include_directories(... PRIVATE ...)` is needed for that case.
+
+#### Scenario: A private helper header is added next to its source
+- **WHEN** a contributor adds a `canfd_frame_parser.hpp` and `canfd_frame_parser.cpp` pair that is only used by other CAN-FD HAL implementation files
+- **THEN** both files live under `src/hal/canfd/` (or `src/hal/`), and `canfd_frame_parser.hpp` is NOT placed under `include/motion_control/hal/`
+
+#### Scenario: A header is incorrectly placed under include/ but is private
+- **WHEN** a code review finds a header under `include/motion_control/<component>/` that is only `#include`'d by sources within that component
+- **THEN** the reviewer requires it to be moved into `src/<component>/`, since `include/motion_control/` is reserved for the public API surface
+
+#### Scenario: A private header is promoted to public
+- **WHEN** a contributor decides that a previously private header should become part of a component's public API (e.g., another component or a test now needs to include it)
+- **THEN** the header is moved from `src/<component>/` into `include/motion_control/<component>/`, and the change is reviewed as a public-API addition (since it is now part of the contract)
 
 ### Requirement: Sub-namespaces match component directory names
 Each component's public symbols SHALL be declared in the C++ namespace `motion_control::<component>`, where `<component>` matches the directory name verbatim (with directory hyphens or other filesystem-only characters mapped to underscores in the namespace where needed). Components SHALL NOT add public symbols to the bare `motion_control::` namespace, except for symbols that pre-date this requirement (currently only `motion_control::identity_matrix()` in the orchestrator) which are grandfathered until they are removed or moved.
