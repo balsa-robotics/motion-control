@@ -1,4 +1,4 @@
-#include "motion_control/core.hpp"
+#include "motion_control/core/core.hpp"
 
 #include <gtest/gtest.h>
 
